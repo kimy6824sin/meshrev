@@ -1,0 +1,9 @@
+[project]
+name = "meshrev"
+version = "0.1.0"
+description = "Scan mesh -> parametric CAD (STEP) reverse engineering for engine and general mechanical parts"
+requires-python = ">=3.10"
+dependencies = ["numpy", "scipy", "trimesh", "networkx", "rtree", "shapely", "contourpy", "cadquery"]
+
+[project.scripts]
+meshrev = "meshrev.cli:main"
