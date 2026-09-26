@@ -16,7 +16,6 @@ RING_GROOVE = [0.8, 1.0, 1.2, 1.5, 1.75, 2.0, 2.5, 3.0, 3.5, 4.0]
 def std_holes():
     t = [(d, f'M{m} 通孔({k})') for m, ds in CLEARANCE.items() for d, k in zip(ds, ('精', '中', '粗'))]
     t += [(d, f'M{m} 螺纹底孔') for m, d in TAP_DRILL.items()]
-    t += [(d, f'M{m} 沉头孔') for m, d in CBORE.items()]
     t += [(float(d), f'轴承座孔 Ø{d}') for d in BEARING_OD]
     return t
 
@@ -60,10 +59,32 @@ def _circle_pattern(H, tol):
 def regularize(feats, holes, tol):
     """Design-intent recovery: standard hole sizes, axis snapping, patterns, round dimensions."""
     notes, table = [], std_holes()
+    # coaxial equal holes (e.g. piston pin bosses, line-bored bearings) -> one straight bore
+    merged = []
+    for h in sorted(holes, key=lambda h: (h['k'], h['p'][h['k']])):
+        k = h['k']
+        for g in merged:
+            if g['k'] == k and abs(g['d'] - h['d']) < max(2 * tol['A'], 0.02 * h['d']) and \
+                    all(abs(g['p'][j] - h['p'][j]) < tol['B'] for j in range(3) if j != k):
+                e = max(g['p'][k] + g['h'], h['p'][k] + h['h'])
+                if h['p'][k] > g['p'][k] + g['h'] + 1e-6:
+                    notes.append(f"同轴等径孔 Ø{h['d']:.2f} 合并为一个贯通孔（同轴镗孔设计意图）")
+                g['d'] = (g['d'] + h['d']) / 2
+                g['h'] = e - g['p'][k]
+                g['rough'] = max(g.get('rough', 0), h.get('rough', 0))
+                break
+        else:
+            merged.append(h)
+    holes = merged
     # equal-size intent: holes of the same axis with nearly equal diameter share one diameter
-    for h in holes:
-        same = [g for g in holes if g['k'] == h['k'] and abs(g['d'] - h['d']) < max(2 * tol['A'], 0.02 * h['d'])]
-        h['d_mean'] = float(np.mean([g['d'] for g in same]))
+    for k in {h['k'] for h in holes}:  # cluster diameters per axis (sorted gaps), one value per cluster
+        hs = sorted((h for h in holes if h['k'] == k), key=lambda h: h['d'])
+        grp = [[hs[0]]]
+        for h in hs[1:]:
+            (grp[-1].append(h) if h['d'] - grp[-1][-1]['d'] < max(2 * tol['A'], 0.02 * h['d']) else grp.append([h]))
+        for g in grp:
+            for h in g:
+                h['d_mean'] = float(np.mean([x['d'] for x in g]))
     out_h = []
     for h in holes:
         d0 = h['d_mean']
@@ -123,3 +144,12 @@ def summary(feats):
             d.update({k: f[k] for k in ('n', 'module', 'note') if k in f})
         out.append(d)
     return out
+
+
+def gear_intent(g, tol):
+    """Module from tip diameter (standard, x=0): d_tip = m (z + 2); snap to ISO 54 series within 2%."""
+    m = 2 * g['r_tip'] / (g['n'] + 2)
+    ms = min(GEAR_MODULE, key=lambda v: abs(v - m))
+    g['module'] = ms if abs(ms - m) / m < 0.02 else round(m, 3)
+    g['note'] = f"齿轮/齿圈 z={g['n']}，模数≈{m:.3f}" + (f"（取标准模数 {ms}）" if g['module'] == ms else '')
+    return g

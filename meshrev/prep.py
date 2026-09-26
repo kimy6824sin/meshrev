@@ -113,7 +113,8 @@ def frame(m, fn=None):
     T = np.eye(4)
     T[:3, :3] = R
     p = m.vertices @ R.T
-    T[:3, 3] = -np.array([*(p[:, :2].min(0) + p[:, :2].max(0)) / 2, p[:, 2].min()])
+    lo, hi = np.percentile(p, 0.02, axis=0), np.percentile(p, 99.98, axis=0)  # robust to scan spikes
+    T[:3, 3] = -np.array([*(lo[:2] + hi[:2]) / 2, lo[2]])
     return T, dict(planes=planes, axes=axes)
 
 

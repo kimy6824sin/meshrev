@@ -2,7 +2,7 @@
 import numpy as np
 import shapely
 from shapely import affinity
-from shapely.geometry import Polygon, MultiPolygon
+from shapely.geometry import Polygon
 from shapely.ops import unary_union
 import contourpy
 
@@ -18,12 +18,6 @@ def sections(m, zs):
         g = unary_union([q.buffer(0) for q in p.polygons_full])
         out.append(affinity.affine_transform(g, [T[0, 0], T[0, 1], T[1, 0], T[1, 1], T[0, 3], T[1, 3]]))
     return out
-
-
-def grid_xy(bounds, h):
-    xs = np.arange(bounds[0][0] + h / 2, bounds[1][0], h)
-    ys = np.arange(bounds[0][1] + h / 2, bounds[1][1], h)
-    return xs, ys
 
 
 def voxels(polys, xs, ys):
@@ -230,20 +224,6 @@ def fit_ring(P, tol, ds=None, hole=False):
     return ents
 
 
-def merge(ents, ang=1.0):
-    """Merge collinear consecutive lines."""
-    out = []
-    for e in ents:
-        if out and e[0] == 'L' and out[-1][0] == 'L':
-            a, b = out[-1][1], out[-1][2]
-            u, v = b - a, e[2] - e[1]
-            if abs(np.degrees(np.arctan2(np.cross(u, v), u @ v))) < ang:
-                out[-1] = ('L', a, e[2])
-                continue
-        out.append(e)
-    return out
-
-
 def snap_axes(ents, ang=1.5):
     """Mechanical regularization: near-horizontal/vertical lines -> exact; recompute line-line corners."""
     ents = [list(e) for e in ents]
@@ -277,6 +257,26 @@ def snap_axes(ents, ang=1.5):
             p = (a[-1] + b[1]) / 2 if fixed[i] is None and fixed[(i + 1) % n] is None else (
                 a[-1] if fixed[i] is not None else b[1])
         a[-1], b[1] = p, p
+    return despike([tuple(e) for e in ents])
+
+
+def despike(ents, min_len=0.05):
+    """Drop fold-back spikes and near-zero segments between consecutive lines (kernel-friendly sketches)."""
+    ents = [list(e) for e in ents]
+    changed = True
+    while changed and len(ents) > 3:
+        changed = False
+        for i in range(len(ents)):
+            a, b = ents[i], ents[(i + 1) % len(ents)]
+            if a[0] != 'L' or b[0] != 'L':
+                continue
+            u, v = a[2] - a[1], b[2] - b[1]
+            nu, nv = np.linalg.norm(u), np.linalg.norm(v)
+            if nu < min_len or nv < min_len or (u @ v) / (nu * nv + 1e-12) < -0.95:
+                a[2] = b[2]  # merge b into a
+                ents.pop((i + 1) % len(ents))
+                changed = True
+                break
     return [tuple(e) for e in ents]
 
 
@@ -316,3 +316,22 @@ def ents_polygon(ents, n_arc=16):
             t = np.r_[np.linspace(a[0], a1, n_arc // 2, endpoint=False), np.linspace(a1, a2, n_arc // 2, endpoint=False)]
             pts.extend(c + r * np.c_[np.cos(t), np.sin(t)])
     return Polygon(pts).buffer(0) if len(pts) >= 3 else Polygon()
+
+
+def poly_lines(p, t):
+    """Straight-line sketch of a polygon (robust fallback)."""
+    q = p.simplify(t)
+    ring = lambda r: [('L', np.array(a), np.array(b)) for a, b in zip(r.coords[:-1], r.coords[1:])]
+    return ring(q.exterior), [ring(r) for r in q.interiors]
+
+
+def robust_entities(p, tol):
+    """Entities with a tolerance limited by the section width; falls back to lines if the fit distorts."""
+    t = max(min(tol, 0.25 * 2 * p.area / max(p.length, 1e-9)), 0.02)
+    ext, ints = polygon_entities(p, t)
+    q = ents_polygon(ext)
+    for e in ints:
+        q = q.difference(ents_polygon(e))
+    if q.is_empty or q.symmetric_difference(p).area > 0.1 * p.area:
+        ext, ints = poly_lines(p, t)
+    return ext, ints

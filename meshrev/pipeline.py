@@ -8,7 +8,7 @@ from . import prep, body, residual, cad, verify, knowledge
 
 def tolerances(sigma, diag):
     """Precision tiers: A mating/contact (machined), B general, C cast/appearance."""
-    return dict(A=max(0.05, 3 * sigma), B=0.3, C=max(0.5, 0.004 * diag))
+    return dict(A=max(0.05, 3 * sigma), B=0.3, C=max(0.8, 0.01 * diag))
 
 
 def a_rev(m, fn):
@@ -64,19 +64,27 @@ def reconstruct(path, log=print):
     if ar is not None and ar > 0.45:
         mode = 'revolve'
         occ, rs, zs, h = body.rz_profile(m)
-        feats = body.revolve(m, occ, rs, zs, h, tol['A'], sinfo['zplanes'])
+        gear = body.detect_gear(m)
+        if gear:
+            occ[np.ix_((zs >= gear['s0'] - h) & (zs <= gear['s1'] + h), rs > gear['r_root'] - h)] = 0
+            gear['r_in'] = gear['r_root'] - max(1.0, 3 * h)
+        feats = body.revolve(m, body.outer_shell(occ), rs, zs, h, tol['A'], sinfo['zplanes'])
         holes = []
+        if gear:
+            feats.append(gear)
     else:
         mode = 'stack'
         if ar is not None:  # undo recentre
             m.apply_translation([c[0], c[1], 0])
             info['T'][:2, 3] += c
             feats, holes, sinfo = body.stack(m, fn, tol['A'])
-    log(f"base: {mode} ({len(feats)} features, {len(sinfo['levels'])} levels, A_rev={ar}) {time.time() - t0:.1f}s")
+    for k in ((0, 1, 2) if mode == 'revolve' else (0, 1)):
+        holes += body.axis_holes(m, k, tol['A'], exclude_axis=(mode == 'revolve' and k == 2))
+    log(f"base: {mode} ({len(feats)} features, {len(holes)} holes, {len(sinfo['levels'])} levels, A_rev={ar}) {time.time() - t0:.1f}s")
     # residual features (analysis by synthesis)
     g = residual.Grid(m, float(np.clip(m.extents.max() / 160, 0.15, 1.0)))
     M = residual.mesh_voxels(m, g)
-    for it in range(2):
+    for it in range(3):
         new = residual.residual_features(m, feats + holes, g, M, tol['C'])
         new, nh = holes_from_prisms(m, new, g.h)
         log(f"residual pass {it + 1}: +{len(new)} prisms, +{len(nh)} holes")
@@ -84,12 +92,11 @@ def reconstruct(path, log=print):
             break
         feats += [f for f in new if f['mode'] == 'add'] + [f for f in new if f['mode'] == 'cut']
         holes += nh
-    feats = [f for f in feats if f.get('mode', 'add') == 'add'] + [f for f in feats if f.get('mode') == 'cut']
     feats += [h for h in holes if h['op'] == 'prism']
     holes = [h for h in holes if h['op'] != 'prism']
-    feats = [f for f in feats if f.get('mode', 'add') == 'add'] + [f for f in feats if f.get('mode') == 'cut']
+    feats = [knowledge.gear_intent(f, tol) if f['op'] == 'gear' and 'module' not in f else f for f in feats]
     feats, holes, notes = knowledge.regularize(feats, holes, tol)
-    info.update(mode=mode, notes=notes, time=time.time() - t0)
+    info.update(mode=mode, notes=notes, time=time.time() - t0, zplanes=sinfo['zplanes'])
     return m, feats + holes, info
 
 
@@ -101,24 +108,24 @@ def run(path, out, ai=False, log=print):
     if ai:
         from . import ai as A
         feats, info = A.review(feats, info, log)
-    feats = cad.validate(feats, log)
+    feats = cad.safe_sequence(cad.validate(feats, log), log)
     src = cad.script(feats, info['T'], f'{name}.py')
     (out / f'{name}.py').write_text(src)
     shape = cad.build(src)
     cad.export(shape, out / f'{name}.step')
-    import trimesh
-    scan = trimesh.load(path, force='mesh')
     model = cad.to_mesh(shape)
-    pts, d = verify.deviation(scan, model)
+    model.apply_transform(info['T'])  # compare in the canonical frame
+    pts, d = verify.deviation(m, model)
     st = verify.stats(d, info['tol']['B'])
-    log(f"deviation: rms={st['rms']:.3f} p95={st['p95']:.3f} within±{info['tol']['B']}={st['within'] * 100:.1f}%")
-    info['deviation'] = st
+    ts = verify.tier_stats(d, verify.tiers(m, feats, pts, info['sigma'], info['zplanes']), info['tol'])
+    log(f"deviation: rms={st['rms']:.3f} p95={st['p95']:.3f} within±{info['tol']['B']}={st['within'] * 100:.1f}% | " +
+        ' '.join(f"{k}({v['frac'] * 100:.0f}%): rms {v['rms']:.3f}, ±{info['tol'][k]:.2f} {v['within'] * 100:.0f}%" for k, v in ts.items()))
     summary = dict(file=str(path), mode=info['mode'], sigma=info['sigma'], tol=info['tol'],
-                   deviation=st, notes=info['notes'], features=knowledge.summary(feats))
+                   deviation=st, tiers=ts, notes=info['notes'], features=knowledge.summary(feats))
     (out / f'{name}.json').write_text(json.dumps(summary, indent=1, ensure_ascii=False, default=float))
     try:
         from . import report
-        report.write(out / f'{name}.html', scan, model, pts, d, summary)
+        report.write(out / f'{name}.html', m, model, pts, d, summary)
     except ImportError:
         pass
     return summary

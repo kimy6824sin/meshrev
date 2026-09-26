@@ -35,10 +35,18 @@ def rasterize(feats, g):
         op = f['op']
         if op == 'prism':
             u, v, s = _uv(f['ax'], X, Y, Z)
-            poly = S.ents_polygon(f['outer'])
-            for e in f.get('inner', []):
-                poly = poly.difference(S.ents_polygon(e))
-            mk = (s >= f['s0']) & (s <= f['s1']) & shapely.contains_xy(poly, u, v)
+            outer = S.ents_polygon(f['outer'])
+            inner = [S.ents_polygon(e) for e in f.get('inner', [])]
+            t = np.tan(np.radians(f.get('taper', 0.0)))
+            mk = np.zeros(g.shape, bool)
+            sel = (s >= f['s0']) & (s <= f['s1'])
+            for sv in np.unique(s[sel]):  # one slab per grid layer (tapered sketch shrinks with height)
+                off = -t * (sv - f['s0'])
+                poly = outer.buffer(off, join_style=2) if t else outer
+                for q in inner:
+                    poly = poly.difference(q.buffer(-off, join_style=2) if t else q)
+                lay = sel & (s == sv)
+                mk[lay] = shapely.contains_xy(poly, u[lay], v[lay])
         elif op == 'revolve':
             mk = shapely.contains_xy(S.ents_polygon(f['profile']), np.hypot(X, Y), Z)
         elif op == 'gear':
@@ -74,20 +82,22 @@ def gear_polygon(f):
     phi, rho = np.asarray(f['phi']), np.asarray(f['rho'])
     th = np.concatenate([phi + 2 * np.pi * i / f['n'] for i in range(f['n'])])
     rr = np.tile(rho, f['n'])
-    return shapely.Polygon(np.c_[f['c'][0] + rr * np.cos(th), f['c'][1] + rr * np.sin(th)]).buffer(0)
+    ring = shapely.Polygon(np.c_[f['c'][0] + rr * np.cos(th), f['c'][1] + rr * np.sin(th)]).buffer(0)
+    return ring.difference(shapely.Point(*f['c']).buffer(f['r_in'], 128))
 
 
-def _prism_fit(C, k, g):
+def _prism_fit(C, k, g, tolv=1.5):
     """Best layered prism decomposition of component mask C along axis k -> [(s0, s1, mask2d)], score."""
     Ck = np.moveaxis(C, 2 - k, 0)  # axis k first; remaining axes ordered to match (v, u)
     if k == 1:
         Ck = Ck.transpose(0, 2, 1)
     lay = np.flatnonzero(Ck.any((1, 2)))
     groups, cur = [], [lay[0]]
+    def dist(a, b):  # mean offset between two layer masks (in voxels)
+        edge = (a & ~ndimage.binary_erosion(a)).sum() + (b & ~ndimage.binary_erosion(b)).sum()
+        return (a ^ b).sum() / max(edge / 2, 1)
     for i in lay[1:]:
-        a, b = Ck[cur[0]], Ck[i]
-        jac = (a & b).sum() / max((a | b).sum(), 1)
-        if i == cur[-1] + 1 and jac > 0.7:
+        if i == cur[-1] + 1 and dist(Ck[cur[0]], Ck[i]) <= tolv:
             cur.append(i)
         else:
             groups.append(cur)
@@ -113,30 +123,37 @@ def _prism_fit(C, k, g):
     return out, score
 
 
-def residual_features(m, feats, g, M, tol, min_vol=None, mode_rp=True):
-    """Extract add/cut prisms from the voxel difference."""
+def residual_features(m, feats, g, M, tol, min_vol=None, cap=15):
+    """Extract add/cut prisms from the voxel difference; keep only candidates that improve the fit."""
     B = rasterize(feats, g)
     st = ndimage.generate_binary_structure(3, 1)
-    min_vol = min_vol or max(2.0, (2 * tol) ** 3)
+    it = max(1, int(round(tol / (2 * g.h))))
+    min_vol = min_vol or max((3 * tol) ** 3, 2e-3 * M.sum() * g.h ** 3)
+    tolv = max(1.5, tol / g.h)
     new = []
     for mode, R in (('add', M & ~B), ('cut', B & ~M)):
-        R = ndimage.binary_opening(R, st, iterations=1)
+        R = ndimage.binary_opening(R, st, iterations=it)
         lab, n = ndimage.label(R, st)
         if not n:
             continue
         sizes = ndimage.sum(R, lab, range(1, n + 1)) * g.h ** 3
         for ci in np.flatnonzero(sizes >= min_vol) + 1:
             C = lab == ci
-            best = max(((k, *_prism_fit(C, k, g)) for k in range(3)), key=lambda t: t[2])
+            best = max(((k, *_prism_fit(C, k, g, tolv)) for k in range(3)), key=lambda t: t[2])
             k, layers, sc = best
-            if sc < 0.4:
+            if sc < 0.25:
                 continue
             ku, kv = (k + 1) % 3, (k + 2) % 3
             for s0, s1, rep in layers:
                 for p in S.contours(rep, 0.5, g.ax[ku][0], g.ax[kv][0], g.h, min_area=4 * g.h ** 2):
-                    ext, ints = S.polygon_entities(p, max(tol, g.h))
+                    ext, ints = S.robust_entities(p, max(tol, g.h))
                     if S.ents_polygon(ext).area < 4 * g.h ** 2:
                         continue
-                    new.append(dict(op='prism', ax=k, s0=float(s0), s1=float(s1), outer=ext, inner=ints,
-                                    mode=mode, tier='C', note=f'residual {mode}'))
-    return new
+                    f = dict(op='prism', ax=k, s0=float(s0), s1=float(s1), outer=ext, inner=ints,
+                             mode=mode, tier='C', note=f'residual {mode}')
+                    F = rasterize([dict(f, mode='add')], g)
+                    good = (F & (~B if mode == 'add' else B) & (M if mode == 'add' else ~M)).sum()
+                    bad = (F & (~B if mode == 'add' else B) & (~M if mode == 'add' else M)).sum()
+                    if good - bad > 0.3 * F.sum() and (good - bad) * g.h ** 3 > min_vol / 2:
+                        new.append((good - bad, f))
+    return [f for _, f in sorted(new, key=lambda t: -t[0])[:cap]]

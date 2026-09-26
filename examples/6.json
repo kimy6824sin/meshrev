@@ -1,0 +1,431 @@
+{
+ "file": "6.stl",
+ "mode": "revolve",
+ "sigma": 0.031819261488846035,
+ "tol": {
+  "A": 0.0954577844665381,
+  "B": 0.3,
+  "C": 1.0947477700943888
+ },
+ "deviation": {
+  "rms": 0.29640789522924693,
+  "p95": 0.6666200566975119,
+  "max": 2.411961812130965,
+  "within": 0.8203
+ },
+ "tiers": {
+  "A": {
+   "rms": 0.14361978353533097,
+   "p95": 0.27783695364398087,
+   "max": 2.064775758682388,
+   "within": 0.8151794871794872,
+   "frac": 0.24375
+  },
+  "B": {
+   "rms": 0.3474310128974889,
+   "p95": 0.7403613847200271,
+   "max": 2.343443483817984,
+   "within": 0.7234220659635024,
+   "frac": 0.447975
+  },
+  "C": {
+   "rms": 0.3054161520115584,
+   "p95": 0.6712368836622702,
+   "max": 2.411961812130965,
+   "within": 0.9851593544724677,
+   "frac": 0.308275
+  }
+ },
+ "notes": [
+  "同轴等径孔 Ø15.32 合并为一个贯通孔（同轴镗孔设计意图）",
+  "孔Ø15.3 实测轴线偏斜 3.35°，按设计意图取与基准面垂直"
+ ],
+ "features": [
+  {
+   "op": "revolve",
+   "mode": "add",
+   "tier": "A",
+   "profile": "LLLALLLLLLLLLLLLALLLLLLLLLLL"
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "X",
+   "range": [
+    15.313,
+    17.785
+   ],
+   "sketch": "LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL",
+   "inner": 1
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "X",
+   "range": [
+    -18.054,
+    -15.583
+   ],
+   "sketch": "LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL",
+   "inner": 2
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "X",
+   "range": [
+    -15.583,
+    -14.347
+   ],
+   "sketch": "LLLLLLLLLLLLLLLLLLLLLLL",
+   "inner": 2
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "X",
+   "range": [
+    19.021,
+    22.316
+   ],
+   "sketch": "LLLLLLL",
+   "inner": 1
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "X",
+   "range": [
+    -22.174,
+    -19.29
+   ],
+   "sketch": "LLLLLLLL",
+   "inner": 1
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "X",
+   "range": [
+    13.254,
+    15.313
+   ],
+   "sketch": "LLLLLLLL",
+   "inner": 1
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "X",
+   "range": [
+    17.785,
+    19.021
+   ],
+   "sketch": "LLLLLLLLLLLL",
+   "inner": 6
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "X",
+   "range": [
+    -19.29,
+    -18.054
+   ],
+   "sketch": "LLLLLLLLLLLLLLLLLLL",
+   "inner": 7
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "X",
+   "range": [
+    13.254,
+    15.313
+   ],
+   "sketch": "LLLLLLLLLLLLLL",
+   "inner": 3
+  },
+  {
+   "op": "prism",
+   "mode": "cut",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    21.413,
+    57.664
+   ],
+   "sketch": "LLLLLLLLLLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "cut",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    24.709,
+    57.664
+   ],
+   "sketch": "LLLLLLLLLLLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "cut",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    14.822,
+    24.709
+   ],
+   "sketch": "LLLLLLLLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "cut",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    11.526,
+    16.058
+   ],
+   "sketch": "LLLLLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "cut",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    11.938,
+    16.058
+   ],
+   "sketch": "LLLLLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "cut",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    16.058,
+    21.413
+   ],
+   "sketch": "LLLLLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "X",
+   "range": [
+    -14.347,
+    -9.815
+   ],
+   "sketch": "LLLLLLLLLLLLLLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "X",
+   "range": [
+    9.958,
+    13.254
+   ],
+   "sketch": "LLLLLLLLLLLLLLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    26.768,
+    53.133
+   ],
+   "sketch": "LLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    25.945,
+    53.133
+   ],
+   "sketch": "LLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "X",
+   "range": [
+    -25.057,
+    -21.762
+   ],
+   "sketch": "LLLLLLLLLLLLLLLL",
+   "inner": 1
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "X",
+   "range": [
+    21.904,
+    26.024
+   ],
+   "sketch": "LLLLLLLLLLLLLLL",
+   "inner": 1
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    28.004,
+    53.133
+   ],
+   "sketch": "LLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    19.765,
+    53.133
+   ],
+   "sketch": "LLLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    22.237,
+    53.133
+   ],
+   "sketch": "LLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    16.058,
+    26.768
+   ],
+   "sketch": "LLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "cut",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    9.467,
+    11.526
+   ],
+   "sketch": "LLLLLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "cut",
+   "tier": "C",
+   "axis": "Y",
+   "range": [
+    -20.988,
+    -17.692
+   ],
+   "sketch": "LLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "cut",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    15.646,
+    18.118
+   ],
+   "sketch": "LLLLLLLLLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "cut",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    15.646,
+    18.118
+   ],
+   "sketch": "LLLLLLLLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "cut",
+   "tier": "C",
+   "axis": "Y",
+   "range": [
+    -17.692,
+    -15.633
+   ],
+   "sketch": "LLLLLLLLLLLLLLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "cut",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    8.231,
+    9.467
+   ],
+   "sketch": "LLLLLLLLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "hole",
+   "mode": "add",
+   "tier": "A",
+   "d": 15.3,
+   "h": 52.3,
+   "note": "孔 (实测Ø15.330)"
+  }
+ ]
+}

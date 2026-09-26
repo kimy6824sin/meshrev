@@ -1,0 +1,254 @@
+{
+ "file": "4.stl",
+ "mode": "stack",
+ "sigma": 0.05004106899376381,
+ "tol": {
+  "A": 0.15012320698129142,
+  "B": 0.3,
+  "C": 0.8
+ },
+ "deviation": {
+  "rms": 0.2016840540901845,
+  "p95": 0.387753742256387,
+  "max": 1.8093099199825542,
+  "within": 0.924025
+ },
+ "tiers": {
+  "A": {
+   "rms": 0.07783559144362846,
+   "p95": 0.16129893833600145,
+   "max": 0.3869739000244998,
+   "within": 0.9400733795352629,
+   "frac": 0.36795
+  },
+  "B": {
+   "rms": 0.2554763912978231,
+   "p95": 0.5126549629554795,
+   "max": 1.8093099199825542,
+   "within": 0.872637394591451,
+   "frac": 0.51585
+  },
+  "C": {
+   "rms": 0.20279210675768122,
+   "p95": 0.3964370054471706,
+   "max": 1.7478451402660888,
+   "within": 0.9905335628227194,
+   "frac": 0.1162
+  }
+ },
+ "notes": [
+  "同轴等径孔 Ø2.95 合并为一个贯通孔（同轴镗孔设计意图）",
+  "孔Ø7.0 实测轴线偏斜 0.64°，按设计意图取与基准面垂直",
+  "孔Ø2.9 实测轴线偏斜 1.00°，按设计意图取与基准面垂直",
+  "孔Ø7.0 实测轴线偏斜 0.63°，按设计意图取与基准面垂直",
+  "识别圆周阵列: 2×Ø7.0，节圆Ø46.0"
+ ],
+ "features": [
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "A",
+   "axis": "Z",
+   "range": [
+    0.1,
+    2.0
+   ],
+   "sketch": "ALLLALALLALALAL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "A",
+   "axis": "Z",
+   "range": [
+    2.0,
+    7.5
+   ],
+   "sketch": "ALLLALALAALALAL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "A",
+   "axis": "Z",
+   "range": [
+    7.5,
+    12.5
+   ],
+   "sketch": "LALAAALALLLALALLL",
+   "inner": 1
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "A",
+   "axis": "Z",
+   "range": [
+    12.5,
+    14.1
+   ],
+   "sketch": "LALLLLALAAALALLLAL",
+   "inner": 1
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "A",
+   "axis": "Z",
+   "range": [
+    14.1,
+    15.8
+   ],
+   "sketch": "LALAAAALLA",
+   "inner": 1
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "A",
+   "axis": "Z",
+   "range": [
+    15.8,
+    17.4
+   ],
+   "sketch": "ALLLLAAALALL",
+   "inner": 1
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    3.356,
+    7.468
+   ],
+   "sketch": "LLLLLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "cut",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    4.104,
+    7.468
+   ],
+   "sketch": "LLLLLLLLLLLLLLLLLLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "cut",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    4.104,
+    7.468
+   ],
+   "sketch": "LLLLLLLLLLLLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "cut",
+   "tier": "C",
+   "axis": "X",
+   "range": [
+    -7.101,
+    7.104
+   ],
+   "sketch": "LLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    3.356,
+    7.468
+   ],
+   "sketch": "LLLLLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "add",
+   "tier": "C",
+   "axis": "Z",
+   "range": [
+    3.356,
+    7.468
+   ],
+   "sketch": "LLLLLLLLLL",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "cut",
+   "tier": "B",
+   "axis": "Z",
+   "range": [
+    0.1,
+    2.0
+   ],
+   "sketch": "C",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "cut",
+   "tier": "B",
+   "axis": "Z",
+   "range": [
+    2.0,
+    7.5
+   ],
+   "sketch": "C",
+   "inner": 0
+  },
+  {
+   "op": "prism",
+   "mode": "cut",
+   "tier": "B",
+   "axis": "Z",
+   "range": [
+    12.5,
+    14.1
+   ],
+   "sketch": "C",
+   "inner": 0
+  },
+  {
+   "op": "holes",
+   "mode": "add",
+   "tier": "A",
+   "d": 7.0,
+   "h": 17.299999999999997,
+   "n": 2,
+   "pcd": 46.0,
+   "note": "M6 通孔(粗) (实测Ø6.921)"
+  },
+  {
+   "op": "hole",
+   "mode": "add",
+   "tier": "A",
+   "d": 2.9,
+   "h": 15.700000000000001,
+   "note": "孔 (实测Ø2.910)"
+  },
+  {
+   "op": "hole",
+   "mode": "add",
+   "tier": "A",
+   "d": 4.5,
+   "h": 1.5999999999999979,
+   "note": "M4 通孔(中) (实测Ø4.457)"
+  }
+ ]
+}
